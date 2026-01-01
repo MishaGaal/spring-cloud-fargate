@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: parser-service
+  cloud:
+    aws:
+      credentials:
+        enabled: false
+      region:
+        static: us-east-1
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+app:
+  sqs:
+    queue-url: ${SQS_QUEUE_URL:mocked-url}
+  s3:
+    bucket: ${BUCKET_NAME:fargate-cloud-excel}
+
+

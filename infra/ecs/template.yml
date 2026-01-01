@@ -1,0 +1,338 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ALB + ECS Fargate (parser-service, processor-service)
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  PublicSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+
+  ClusterName:
+    Type: String
+    Default: spring-cloud-cluster
+
+  ParserServiceImage:
+    Type: String
+    Description: ECR image URI for parser-service
+
+  ProcessorServiceImage:
+    Type: String
+    Description: ECR image URI for processor-service
+
+
+
+Resources:
+
+  ### ECS CLUSTER
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref ClusterName
+
+  ### SECURITY GROUPS
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB SG
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS Services SG
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+
+  ### APPLICATION LOAD BALANCER
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets: !Ref PublicSubnets
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ParserTargetGroup
+
+
+
+  ### TARGET GROUPS
+  ParserTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+      HealthCheckPath: /actuator/health
+      HealthCheckPort: traffic-port
+
+  ProcessorTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+      HealthCheckPath: /actuator/health
+      HealthCheckPort: traffic-port
+
+
+
+  ### LISTENER RULES
+  ParserRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 10
+      Conditions:
+        - Field: path-pattern
+          Values: ["/parsers/*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ParserTargetGroup
+
+  ProcessorRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 20
+      Conditions:
+        - Field: path-pattern
+          Values: ["/processors/*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ProcessorTargetGroup
+
+
+
+  ### TASK EXECUTION ROLE
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+
+
+  ### TASK DEFINITIONS
+
+  ParserLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${ClusterName}/parser-service"
+      RetentionInDays: 14
+
+  ProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${ClusterName}/processor-service"
+      RetentionInDays: 14
+
+  ParserTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities: [ FARGATE ]
+      Cpu: "256"
+      Memory: "512"
+      NetworkMode: awsvpc
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: parser-service
+          Image: !Ref ParserServiceImage
+          PortMappings:
+            - ContainerPort: 8080
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: aws
+            - Name: SQS_QUEUE_URL
+              Value: !GetAtt ExcelEntriesQueue.QueueUrl
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ParserLogGroup
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: parser
+
+
+
+  ProcessorTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities: [ FARGATE ]
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: processor-service
+          Image: !Ref ProcessorServiceImage
+          PortMappings:
+            - ContainerPort: 8080
+          Environment:
+            - Name: SPRING_PROFILES_ACTIVE
+              Value: aws
+            - Name: SQS_QUEUE_URL
+              Value: !GetAtt ExcelEntriesQueue.QueueUrl
+            - Name: SPRING_DATASOURCE_URL
+              Value: jdbc:postgresql://localhost:5432/car-db
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: postgres
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: postgres
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ProcessorLogGroup
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: processor
+
+        - Name: car-db
+          Image: postgres:16
+          Environment:
+            - Name: POSTGRES_DB
+              Value: car-db
+            - Name: POSTGRES_USER
+              Value: postgres
+            - Name: POSTGRES_PASSWORD
+              Value: postgres
+          PortMappings:
+            - ContainerPort: 5432
+
+
+
+
+  ### ECS SERVICES
+  ParserService:
+    Type: AWS::ECS::Service
+    DependsOn: ParserRule
+    Properties:
+      Cluster: !Ref ECSCluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      TaskDefinition: !Ref ParserTask
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: !Ref PublicSubnets
+          SecurityGroups: [ !Ref ServiceSecurityGroup ]
+          AssignPublicIp: ENABLED
+      LoadBalancers:
+        - ContainerName: parser-service
+          ContainerPort: 8080
+          TargetGroupArn: !Ref ParserTargetGroup
+
+  ProcessorService:
+    Type: AWS::ECS::Service
+    DependsOn: ProcessorRule
+    Properties:
+      Cluster: !Ref ECSCluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      TaskDefinition: !Ref ProcessorTask
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: !Ref PublicSubnets
+          SecurityGroups: [ !Ref ServiceSecurityGroup ]
+          AssignPublicIp: ENABLED
+      LoadBalancers:
+        - ContainerName: processor-service
+          ContainerPort: 8080
+          TargetGroupArn: !Ref ProcessorTargetGroup
+
+
+
+  ### S3 BUCKET
+  FargateExcelBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: fargate-cloud-excel
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+
+  ### Optional: Bucket Policy to allow public read
+  FargateExcelBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FargateExcelBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action:
+              - "s3:GetObject"
+            Resource: !Sub "${FargateExcelBucket.Arn}/*"
+
+  ExcelEntriesQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: exel-enries-standart
+      VisibilityTimeout: 60
+      MessageRetentionPeriod: 345600 # 4 days
+
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SqsAccessPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueUrl
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt ExcelEntriesQueue.Arn
+
+
+Outputs:
+  LoadBalancerDNS:
+    Value: !GetAtt ALB.DNSName
