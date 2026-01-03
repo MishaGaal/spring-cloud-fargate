@@ -67,11 +67,11 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: DOCKER_HUB_USERNAME
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x
             Type: SECRETS_MANAGER
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x:username::
           - Name: DOCKER_HUB_PASSWORD
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x
             Type: SECRETS_MANAGER
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x:password::
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
@@ -95,11 +95,11 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: DOCKER_HUB_USERNAME
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x
             Type: SECRETS_MANAGER
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x:username::
           - Name: DOCKER_HUB_PASSWORD
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x
             Type: SECRETS_MANAGER
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x:password::
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
