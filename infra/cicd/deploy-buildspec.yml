@@ -12,4 +12,7 @@ phases:
           --parameter-overrides \
             ParserServiceImage=897316073585.dkr.ecr.us-east-1.amazonaws.com/parser-service:$IMAGE_TAG \
             ProcessorServiceImage=897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:$IMAGE_TAG \
+            ParserTargetGroupArn=arn:aws:elasticloadbalancing:us-east-1:897316073585:targetgroup/spring-Parse-LOCEFVQDAHLJ/c9a67da8f730156c \
+            ProcessorTargetGroupArn=arn:aws:elasticloadbalancing:us-east-1:897316073585:targetgroup/spring-Proce-IPI8ID8LFBLC/1b4f0d70f6e0a475 \
+            AlbSecurityGroupId=sg-0901eb92c3799a3cd \
           --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
