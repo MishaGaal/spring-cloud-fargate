@@ -8,11 +8,10 @@ phases:
 
   build:
     commands:
-      - echo "Logging in to Docker Hub..."
-      - echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME --password-stdin
       - echo "Building Docker image..."
       - docker build -t processor-service:latest -f processor-service/Dockerfile .
       - docker tag processor-service:latest 897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:0.0.1
+      - echo "Pushing Docker image to ECR..."
       - docker push 897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:0.0.1
 
   post_build:
