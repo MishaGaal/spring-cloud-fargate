@@ -1,25 +1,25 @@
+# Stage 1: build
 FROM maven:3.9.3-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-COPY pom.xml ./
-COPY processor-service/pom.xml ./processor-service/
-COPY processor-service/src ./processor-service/src
+# Copy only the processor-service files
+COPY processor-service/pom.xml ./pom.xml
+COPY processor-service/src ./src
 
-WORKDIR /app/processor-service
-
+# Build the project
 RUN mvn clean package -DskipTests
 
-# 2️⃣ Runtime stage
+# Stage 2: runtime image
 FROM eclipse-temurin:17-jdk-jammy
 
 WORKDIR /app
 
-# Copy the built JAR from the build stage
-COPY --from=build /app/processor-service/target/processor-service-0.0.1-SNAPSHOT.jar app.jar
+# Copy built jar from previous stage
+COPY --from=build /app/target/processor-service-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose port 8080
+# Expose port
 EXPOSE 8080
 
-# Command to run the Spring Boot app
+# Run the app
 ENTRYPOINT ["java", "-jar", "app.jar"]

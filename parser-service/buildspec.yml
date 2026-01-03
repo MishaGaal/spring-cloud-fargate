@@ -1,25 +1,21 @@
 version: 0.2
 
 phases:
-  install:
-    commands:
-      - echo "Installing dependencies (already in image)..."
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
+
   build:
     commands:
-      - echo "Building Maven project..."
-      - chmod +x mvnw
-      - ./mvnw clean install
       - echo "Building Docker image..."
-      - docker build -t parser-service:latest ./parser-service
+      - docker build -t parser-service:latest .
+
   post_build:
     commands:
       - echo "Deploying ECS service via CloudFormation..."
       - aws cloudformation deploy \
         --stack-name spring-cloud-fargate \
-        --template-file ../infra/ecs/template.yml \
+        --template-file infra/ecs/template.yml \
         --parameter-overrides ParserServiceImage=parser-service:latest \
         --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
