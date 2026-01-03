@@ -9,7 +9,9 @@ phases:
   build:
     commands:
       - echo "Logging in to Docker Hub..."
-      - docker login --username $DOCKERHUB_USERNAME --password-stdin <<< "$DOCKERHUB_PASSWORD"
+      - echo "DOCKER_USERNAME ${DOCKER_HUB_USERNAME}"
+      - echo "DOCKER_PASSWORD ${DOCKER_HUB_PASSWORD}"
+      - echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME --password-stdin
       - echo "Building Docker image..."
       - docker build -t parser-service:latest -f parser-service/Dockerfile .
 
