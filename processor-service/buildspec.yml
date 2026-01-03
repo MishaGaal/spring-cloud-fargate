@@ -4,10 +4,9 @@ phases:
   pre_build:
     commands:
       - echo "Logging in to Docker Hub..."
-      - echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME --password-stdin
-      - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
-
+        - echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME --password-stdin
+        - echo "Logging in to Amazon ECR..."
+        - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 897316073585.dkr.ecr.us-east-1.amazonaws.com
   build:
     commands:
       - echo "Building Docker image..."
