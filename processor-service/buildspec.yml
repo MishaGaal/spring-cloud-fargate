@@ -8,6 +8,8 @@ phases:
 
   build:
     commands:
+      - echo "Logging in to Docker Hub..."
+      - echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME --password-stdin
       - echo "Building Docker image..."
       - docker build -t processor-service:latest -f processor-service/Dockerfile .
 
