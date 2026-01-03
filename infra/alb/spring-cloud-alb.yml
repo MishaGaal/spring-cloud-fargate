@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Spring Cloud ALB stack
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  PublicSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+
+Resources:
+  ### SECURITY GROUPS
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB SG
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+
+  ### APPLICATION LOAD BALANCER
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets: !Ref PublicSubnets
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ParserTargetGroup
+
+
+
+  ### TARGET GROUPS
+  ParserTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+      HealthCheckPath: /actuator/health
+      HealthCheckPort: traffic-port
+
+  ProcessorTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+      HealthCheckPath: /actuator/health
+      HealthCheckPort: traffic-port
+
+
+
+  ### LISTENER RULES
+  ParserRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 10
+      Conditions:
+        - Field: path-pattern
+          Values: ["/parsers/*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ParserTargetGroup
+
+  ProcessorRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 20
+      Conditions:
+        - Field: path-pattern
+          Values: ["/processors/*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ProcessorTargetGroup
+
+Outputs:
+  AlbArn:
+    Value: !Ref ALB
+    Export:
+      Name: spring-cloud-alb-arn
+
+  AlbListenerArn:
+    Value: !Ref ALBListener
+    Export:
+      Name: spring-cloud-alb-listener-arn
+
+  AlbSecurityGroupId:
+    Value: !Ref ALBSecurityGroup
+    Export:
+      Name: spring-cloud-alb-sg-id
+
+  ParserTargetGroupArn:
+    Value: !Ref ParserTargetGroup
+    Export:
+      Name: spring-cloud-parser-tg-arn
+
+  ProcessorTargetGroupArn:
+    Value: !Ref ProcessorTargetGroup
+    Export:
+      Name: spring-cloud-processor-tg-arn
