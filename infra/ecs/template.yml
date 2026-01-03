@@ -331,8 +331,3 @@ Resources:
                   - sqs:GetQueueUrl
                   - sqs:GetQueueAttributes
                 Resource: !GetAtt ExcelEntriesQueue.Arn
-
-
-Outputs:
-  LoadBalancerDNS:
-    Value: !GetAtt ALB.DNSName
