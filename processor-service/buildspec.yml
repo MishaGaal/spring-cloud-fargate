@@ -9,7 +9,7 @@ phases:
   build:
     commands:
       - echo "Building Docker image..."
-      - docker build -t processor-service:latest -f processor-service/Dockerfile ./processor-service
+      - docker build -t processor-service:latest -f processor-service/Dockerfile .
 
   post_build:
     commands:
