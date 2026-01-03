@@ -47,6 +47,13 @@ Resources:
                   - ecr:InitiateLayerUpload
                   - ecr:PutImage
                 Resource: "*"
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username*
+                  - arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password*
+
 
 
   # Parser Service CodeBuild Project
@@ -68,10 +75,10 @@ Resources:
         EnvironmentVariables:
           - Name: DOCKER_HUB_USERNAME
             Type: SECRETS_MANAGER
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username-1WZeNo
+            Value: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username-1WZeNo
           - Name: DOCKER_HUB_PASSWORD
             Type: SECRETS_MANAGER
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password-BBwR48
+            Value: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password-BBwR48
 
       LogsConfig:
         CloudWatchLogs:
@@ -97,10 +104,10 @@ Resources:
         EnvironmentVariables:
           - Name: DOCKER_HUB_USERNAME
             Type: SECRETS_MANAGER
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username-1WZeNo
+            Value: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username-1WZeNo
           - Name: DOCKER_HUB_PASSWORD
             Type: SECRETS_MANAGER
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password-BBwR48
+            Value: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password-BBwR48
 
       LogsConfig:
         CloudWatchLogs:
@@ -123,6 +130,25 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+
+  DeployBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: DeployEcsStack
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infra/cicd/deploy-buildspec.yml
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        Type: LINUX_CONTAINER
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: /aws/codebuild/DeployEcsStack
 
   # CI/CD Pipeline
   CICDPipeline:
@@ -171,3 +197,15 @@ Resources:
                 - Name: SourceOutput
               Configuration:
                 ProjectName: !Ref ProcessorServiceBuild
+        - Name: Deploy
+          Actions:
+            - Name: DeployEcs
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              InputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                ProjectName: !Ref DeployBuild
