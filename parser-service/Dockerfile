@@ -1,22 +1,25 @@
+# Stage 1: build
 FROM maven:3.9.3-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-COPY pom.xml ./
-COPY parser-service/pom.xml ./parser-service/
-COPY parser-service/src ./parser-service/src
+# Copy only the parser-service files
+COPY parser-service/pom.xml ./pom.xml
+COPY parser-service/src ./src
 
-WORKDIR /app/parser-service
-
+# Build the project
 RUN mvn clean package -DskipTests
 
+# Stage 2: runtime image
 FROM eclipse-temurin:17-jdk-jammy
 
 WORKDIR /app
 
-COPY --from=build /app/parser-service/target/parser-service-0.0.1-SNAPSHOT.jar app.jar
+# Copy built jar from previous stage
+COPY --from=build /app/target/parser-service-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
 
