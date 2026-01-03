@@ -53,6 +53,19 @@ Resources:
                 Resource:
                   - arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username*
                   - arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password*
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeStackResources
+                  - cloudformation:GetTemplate
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DescribeChangeSet
+                Resource: "*"
 
 
 
