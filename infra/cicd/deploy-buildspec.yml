@@ -4,4 +4,11 @@ phases:
   post_build:
     commands:
       - echo "Deploying ECS stack..."
-      - aws cloudformation deploy --stack-name spring-cloud-fargate --template-file infra/ecs/template.yml --parameter-overrides ParserServiceImage=parser-service:latest --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+      - |
+        aws cloudformation deploy \
+          --stack-name spring-cloud-fargate \
+          --template-file infra/ecs/template.yml \
+          --parameter-overrides \
+            ParserServiceImage=897316073585.dkr.ecr.us-east-1.amazonaws.com/parser-service:0.0.1 \
+            ProcessorServiceImage=897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:0.0.1 \
+          --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
