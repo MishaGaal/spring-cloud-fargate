@@ -36,12 +36,14 @@ public class ExcelParser {
             @Override
             public void invoke(Entry entry, AnalysisContext context) {
                try{
+                   log.debug("Processing entry: {}", entry.getDocR());
                    entry.setExtractionId(extractionId);
                    entry.setExtractionDate(LocalDate.now());
                    batch.add(entry);
 
                    if (batch.size() >= MESSAGE_SIZE) {
                        sqsService.sendBatch(batch, extractionId);
+                       log.debug("Sending batch");
                        batch.clear();
                    }
                } catch (Exception e) {
@@ -54,6 +56,7 @@ public class ExcelParser {
                 if (!batch.isEmpty()) {
                     try {
                         sqsService.sendBatch(batch, extractionId);
+                        log.info("Sending remaining batch");
                         batch.clear();
                     } catch (Exception e) {
                         log.error("Couldn't send final batch to SQS", e);

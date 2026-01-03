@@ -38,6 +38,16 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${PipelineArtifactBucket}"
                   - !Sub "arn:aws:s3:::${PipelineArtifactBucket}/*"
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                Resource: "*"
+
 
   # Parser Service CodeBuild Project
   ParserServiceBuild:
