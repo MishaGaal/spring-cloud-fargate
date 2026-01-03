@@ -67,11 +67,11 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: DOCKER_HUB_USERNAME
-            Value: mishagaal
-            Type: PLAINTEXT
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x
+            Type: SECRETS_MANAGER
           - Name: DOCKER_HUB_PASSWORD
-            Value: ydckr_pat_vZ4_BmzGkQ7q-xyyS_CDk0Fp9TI #TODO move to Secrets
-            Type: PLAINTEXT
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x
+            Type: SECRETS_MANAGER
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
@@ -95,12 +95,11 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: DOCKER_HUB_USERNAME
-            Value: mishagaal
-            Type: PLAINTEXT
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x
+            Type: SECRETS_MANAGER
           - Name: DOCKER_HUB_PASSWORD
-            Value: dckr_pat_vZ4_BmzGkQ7q-xyyS_CDk0Fp9TI #TODO move to Secrets
-            Type: PLAINTEXT
-
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub/credentials-guKU3x
+            Type: SECRETS_MANAGER
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
