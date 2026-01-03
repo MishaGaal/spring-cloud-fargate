@@ -29,7 +29,12 @@ aws cloudformation create-stack \
 ParameterKey=VpcId,ParameterValue=vpc-0abc226a4844979c0 \
 ParameterKey=PublicSubnets,ParameterValue=\"subnet-0994bc765f2ad05f0,subnet-0e0074d0493ddaada\" \
 ParameterKey=ParserServiceImage,ParameterValue=897316073585.dkr.ecr.us-east-1.amazonaws.com/parser-service:0.0.1 \
-ParameterKey=ProcessorServiceImage,ParameterValue=897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:0.0.1 --capabilities CAPABILITY_IAM
+ParameterKey=ProcessorServiceImage,ParameterValue=897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:0.0.1 \
+ParameterKey=ParserTargetGroupArn,ParameterValue=arn:aws:elasticloadbalancing:us-east-1:897316073585:targetgroup/spring-Parse-LOCEFVQDAHLJ/c9a67da8f730156c \
+ParameterKey=ProcessorTargetGroupArn,ParameterValue=arn:aws:elasticloadbalancing:us-east-1:897316073585:targetgroup/spring-Proce-IPI8ID8LFBLC/1b4f0d70f6e0a475 \
+ParameterKey=AlbSecurityGroupId,ParameterValue=sg-0901eb92c3799a3cd \
+--capabilities CAPABILITY_IAM
+
 
 # Verify cfn stack
 aws cloudformation describe-stacks --stack-name spring-cloud-fargate

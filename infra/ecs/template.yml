@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: ALB + ECS Fargate (parser-service, processor-service)
+Description: ECS Fargate (parser-service, processor-service)
 
 Parameters:
   VpcId:
@@ -20,6 +20,15 @@ Parameters:
     Type: String
     Description: ECR image URI for processor-service
 
+  ParserTargetGroupArn:
+    Type: String
+
+  ProcessorTargetGroupArn:
+    Type: String
+
+  AlbSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+
 
 
 Resources:
@@ -31,20 +40,6 @@ Resources:
       ClusterName: !Ref ClusterName
 
   ### SECURITY GROUPS
-  ALBSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: ALB SG
-      VpcId: !Ref VpcId
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-
 
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -55,81 +50,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: 8080
           ToPort: 8080
-          SourceSecurityGroupId: !Ref ALBSecurityGroup
+          SourceSecurityGroupId: !Ref AlbSecurityGroupId
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
-
-
-  ### APPLICATION LOAD BALANCER
-  ALB:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      Scheme: internet-facing
-      Subnets: !Ref PublicSubnets
-      SecurityGroups:
-        - !Ref ALBSecurityGroup
-
-  ALBListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      LoadBalancerArn: !Ref ALB
-      Port: 80
-      Protocol: HTTP
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref ParserTargetGroup
-
-
-
-  ### TARGET GROUPS
-  ParserTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Port: 8080
-      Protocol: HTTP
-      TargetType: ip
-      VpcId: !Ref VpcId
-      HealthCheckPath: /actuator/health
-      HealthCheckPort: traffic-port
-
-  ProcessorTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Port: 8080
-      Protocol: HTTP
-      TargetType: ip
-      VpcId: !Ref VpcId
-      HealthCheckPath: /actuator/health
-      HealthCheckPort: traffic-port
-
-
-
-  ### LISTENER RULES
-  ParserRule:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      ListenerArn: !Ref ALBListener
-      Priority: 10
-      Conditions:
-        - Field: path-pattern
-          Values: ["/parsers/*"]
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref ParserTargetGroup
-
-  ProcessorRule:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      ListenerArn: !Ref ALBListener
-      Priority: 20
-      Conditions:
-        - Field: path-pattern
-          Values: ["/processors/*"]
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref ProcessorTargetGroup
-
 
 
   ### TASK EXECUTION ROLE
@@ -239,7 +163,6 @@ Resources:
   ### ECS SERVICES
   ParserService:
     Type: AWS::ECS::Service
-    DependsOn: ParserRule
     Properties:
       Cluster: !Ref ECSCluster
       LaunchType: FARGATE
@@ -253,11 +176,10 @@ Resources:
       LoadBalancers:
         - ContainerName: parser-service
           ContainerPort: 8080
-          TargetGroupArn: !Ref ParserTargetGroup
+          TargetGroupArn: !Ref ParserTargetGroupArn
 
   ProcessorService:
     Type: AWS::ECS::Service
-    DependsOn: ProcessorRule
     Properties:
       Cluster: !Ref ECSCluster
       LaunchType: FARGATE
@@ -271,8 +193,7 @@ Resources:
       LoadBalancers:
         - ContainerName: processor-service
           ContainerPort: 8080
-          TargetGroupArn: !Ref ProcessorTargetGroup
-
+          TargetGroupArn: !Ref ProcessorTargetGroupArn
 
 
   ### S3 BUCKET
@@ -331,8 +252,3 @@ Resources:
                   - sqs:GetQueueUrl
                   - sqs:GetQueueAttributes
                 Resource: !GetAtt ExcelEntriesQueue.Arn
-
-
-Outputs:
-  LoadBalancerDNS:
-    Value: !GetAtt ALB.DNSName
