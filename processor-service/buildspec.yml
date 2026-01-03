@@ -14,7 +14,7 @@ phases:
       - chmod +x mvnw
       - ./mvnw clean install
       - echo "Building Docker image..."
-      - docker build -t processor-service:latest .
+      - docker build -t processor-service:latest ./processor-service
   post_build:
     commands:
       - echo "Deploying ECS service via CloudFormation..."
