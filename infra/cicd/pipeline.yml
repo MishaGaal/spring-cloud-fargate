@@ -68,10 +68,10 @@ Resources:
         EnvironmentVariables:
           - Name: DOCKER_HUB_USERNAME
             Type: SECRETS_MANAGER
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username-1WZeNo
           - Name: DOCKER_HUB_PASSWORD
             Type: SECRETS_MANAGER
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password-BBwR48
 
       LogsConfig:
         CloudWatchLogs:
@@ -97,10 +97,10 @@ Resources:
         EnvironmentVariables:
           - Name: DOCKER_HUB_USERNAME
             Type: SECRETS_MANAGER
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-username-1WZeNo
           - Name: DOCKER_HUB_PASSWORD
             Type: SECRETS_MANAGER
-            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password
+            ValueFrom: arn:aws:secretsmanager:us-east-1:897316073585:secret:docker-hub-password-BBwR48
 
       LogsConfig:
         CloudWatchLogs:
