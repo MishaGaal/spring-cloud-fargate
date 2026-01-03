@@ -1,8 +1,0 @@
-# Root buildspec.yml
-version: 0.2
-phases:
-  build:
-    commands:
-      # Use the variable passed from CodePipeline to run the correct buildspec
-      - echo "Starting build for $SERVICE_NAME..."
-      - aws codebuild start-build --project-name $PROJECT_NAME --buildspec-override $SERVICE_NAME/buildspec.yml
