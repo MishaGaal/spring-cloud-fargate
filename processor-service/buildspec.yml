@@ -10,8 +10,8 @@ phases:
     commands:
       - echo Logging in to Docker Hub...
       - echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME --password-stdin
-      - docker build -t mishagaal/parser-service .
-      - docker push mishagaal/parser-service
+      - docker build -t mishagaal/processor-service .
+      - docker push mishagaal/processor-service
       - echo "Building Docker image..."
       - docker build -t processor-service:latest -f processor-service/Dockerfile .
 
