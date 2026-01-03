@@ -12,7 +12,7 @@ phases:
       - echo $DOCKER_HUB_PASSWORD | docker login --username $DOCKER_HUB_USERNAME --password-stdin
       - echo "Building Docker image..."
       - docker build -t parser-service:latest -f parser-service/Dockerfile .
-      - docker tag mykhailo/parser-service:latest 897316073585.dkr.ecr.us-east-1.amazonaws.com/parser-service:0.0.1
+      - docker tag parser-service:latest 897316073585.dkr.ecr.us-east-1.amazonaws.com/parser-service:0.0.1
       - docker push 897316073585.dkr.ecr.us-east-1.amazonaws.com/parser-service:0.0.1
 
   post_build:
