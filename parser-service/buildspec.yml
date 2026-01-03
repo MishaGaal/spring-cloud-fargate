@@ -1,0 +1,33 @@
+version: 0.2
+
+env:
+  variables:
+    STACK_NAME: "spring-cloud-fargate"
+    ECS_PARAM_NAME: "ParserServiceImage"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+      docker: 26
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+  build:
+    commands:
+      - echo Build and test Maven project
+      - chmod +x mvnw
+      - ./mvnw clean install
+      - echo Build Docker image
+      - IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_region.amazonaws.com
+      - docker build -t $IMAGE_URI .
+  post_build:
+    commands:
+    - echo Update ECS Service in CloudFormation
+      - aws cloudformation deploy \
+      --stack-name $STACK_NAME \
+      --template-file ../infra/ecs/template.yml \
+      --parameter-overrides $ECS_PARAM_NAME=$IMAGE_URI \
+      --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+      --no-fail-on-empty-changeset
