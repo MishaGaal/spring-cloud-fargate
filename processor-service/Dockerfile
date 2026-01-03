@@ -3,9 +3,9 @@ FROM maven:3.9.3-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-# Copy only the processor-service files
-COPY processor-service/pom.xml ./pom.xml
-COPY processor-service/src ./src
+
+COPY pom.xml ./
+COPY src ./src
 
 # Build the project
 RUN mvn clean package -DskipTests

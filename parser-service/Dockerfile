@@ -3,9 +3,8 @@ FROM maven:3.9.3-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-# Copy only the parser-service files
-COPY parser-service/pom.xml ./pom.xml
-COPY parser-service/src ./src
+COPY pom.xml ./
+COPY src ./src
 
 # Build the project
 RUN mvn clean package -DskipTests
