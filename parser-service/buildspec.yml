@@ -9,7 +9,7 @@ phases:
   build:
     commands:
       - echo "Building Docker image..."
-      - docker build -t parser-service:latest -f parser-service/Dockerfile ./parser-service
+      - docker build -t parser-service:latest -f parser-service/Dockerfile .
 
   post_build:
     commands:
