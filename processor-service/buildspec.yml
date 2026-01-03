@@ -16,8 +16,4 @@ phases:
   post_build:
     commands:
       - echo "Deploying ECS service via CloudFormation..."
-      - aws cloudformation deploy \
-        --stack-name spring-cloud-fargate \
-        --template-file $CODEBUILD_SRC_DIR/infra/ecs/template.yml \
-        --parameter-overrides ProcessorServiceImage=processor-service:latest \
-        --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+      - aws cloudformation deploy --stack-name spring-cloud-fargate --template-file $CODEBUILD_SRC_DIR/infra/ecs/template.yml --parameter-overrides ParserServiceImage=parser-service:latest --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
