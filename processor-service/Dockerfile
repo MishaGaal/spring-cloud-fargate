@@ -1,8 +1,5 @@
 # Stage 1: build
-FROM amazoncorretto:17 AS build
-
-# Install Maven
-RUN yum install -y maven && yum clean all
+FROM maven:3.9.3-eclipse-temurin-17 AS build
 
 WORKDIR /app
 

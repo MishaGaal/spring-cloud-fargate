@@ -65,6 +65,13 @@ Resources:
         Image: aws/codebuild/standard:7.0
         Type: LINUX_CONTAINER
         PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: DOCKER_HUB_USERNAME
+            Value: mishagaal
+            Type: PLAINTEXT
+          - Name: DOCKER_HUB_PASSWORD
+            Value: ydckr_pat_vZ4_BmzGkQ7q-xyyS_CDk0Fp9TI #TODO move to Secrets
+            Type: PLAINTEXT
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
@@ -86,6 +93,14 @@ Resources:
         Image: aws/codebuild/standard:7.0
         Type: LINUX_CONTAINER
         PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: DOCKER_HUB_USERNAME
+            Value: mishagaal
+            Type: PLAINTEXT
+          - Name: DOCKER_HUB_PASSWORD
+            Value: dckr_pat_vZ4_BmzGkQ7q-xyyS_CDk0Fp9TI #TODO move to Secrets
+            Type: PLAINTEXT
+
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
