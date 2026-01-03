@@ -11,9 +11,9 @@ phases:
     commands:
       - echo "Building Docker image..."
       - docker build -t processor-service:latest -f processor-service/Dockerfile .
-      - docker tag processor-service:latest 897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:0.0.1
+      - docker tag processor-service:latest 897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:$IMAGE_TAG
       - echo "Pushing Docker image to ECR..."
-      - docker push 897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:0.0.1
+      - docker push 897316073585.dkr.ecr.us-east-1.amazonaws.com/processor-service:$IMAGE_TAG
 
   post_build:
     commands:
